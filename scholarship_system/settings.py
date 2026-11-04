@@ -74,16 +74,20 @@ WSGI_APPLICATION = 'scholarship_system.wsgi.application'
 
 # Database - SQLite for local development; handles Vercel's read-only filesystem
 if os.environ.get('VERCEL'):
-    import shutil
     tmp_db = Path('/tmp/db.sqlite3')
-    if not tmp_db.exists():
-        original_db = BASE_DIR / 'db.sqlite3'
-        if original_db.exists():
-            shutil.copy(original_db, tmp_db)
+    try:
+        if not tmp_db.exists():
+            original_db = BASE_DIR / 'db.sqlite3'
+            if original_db.exists():
+                import shutil
+                shutil.copy(str(original_db), str(tmp_db))
+    except Exception as e:
+        print("Database copy notice:", e)
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': tmp_db,
+            'NAME': str(tmp_db),
         }
     }
 else:
@@ -125,8 +129,12 @@ STORAGES = {
 # Media files (uploaded documents)
 MEDIA_URL = '/media/'
 if os.environ.get('VERCEL'):
-    MEDIA_ROOT = Path('/tmp/media')
-    MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+    media_dir = Path('/tmp/media')
+    try:
+        media_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    MEDIA_ROOT = str(media_dir)
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 

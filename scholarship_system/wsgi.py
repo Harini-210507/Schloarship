@@ -20,3 +20,17 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'scholarship_system.settings')
 
 application = get_wsgi_application()
 app = application  # Required alias for Vercel
+
+# Auto-migrate and seed demo data on Vercel if needed
+if os.environ.get('VERCEL'):
+    try:
+        from django.core.management import call_command
+        from django.db import connection
+        tables = connection.introspection.table_names()
+        if not tables or 'django_session' not in tables:
+            call_command('migrate', interactive=False)
+            from scholarships.models import Scholarship
+            if Scholarship.objects.count() == 0:
+                import setup_demo
+    except Exception as e:
+        print("Vercel startup notice:", e)
