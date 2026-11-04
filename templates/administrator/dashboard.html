@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – Scholarship System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🛡️ Admin Dashboard</h1>
+  <p>Manage scholarship applications and documents.</p>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-label">Total Applications</div>
+  </div>
+  <div class="stat-card info">
+    <div class="stat-num">{{ submitted_count }}</div>
+    <div class="stat-label">Submitted</div>
+  </div>
+  <div class="stat-card warning">
+    <div class="stat-num">{{ under_review_count }}</div>
+    <div class="stat-label">Under Review</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-num">{{ approved_count }}</div>
+    <div class="stat-label">Approved</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-num">{{ rejected_count }}</div>
+    <div class="stat-label">Rejected</div>
+  </div>
+</div>
+
+<!-- Quick Links -->
+<div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+  <a href="{% url 'administrator:manage_scholarships' %}" class="btn btn-primary">🎓 Manage Scholarships</a>
+  <a href="{% url 'administrator:create_scholarship' %}" class="btn btn-success">+ New Scholarship</a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filter-bar">
+  <div class="form-group">
+    <label>Status</label>
+    <select name="status" class="form-control">
+      <option value="">All Statuses</option>
+      <option value="submitted"    {% if status_filter == 'submitted'    %}selected{% endif %}>Submitted</option>
+      <option value="under_review" {% if status_filter == 'under_review' %}selected{% endif %}>Under Review</option>
+      <option value="approved"     {% if status_filter == 'approved'     %}selected{% endif %}>Approved</option>
+      <option value="rejected"     {% if status_filter == 'rejected'     %}selected{% endif %}>Rejected</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Scholarship</label>
+    <select name="scholarship" class="form-control">
+      <option value="">All Scholarships</option>
+      {% for s in scholarships %}
+        <option value="{{ s.pk }}" {% if scholarship_filter == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Submitted On</label>
+    <input type="date" name="date" class="form-control" value="{{ date_filter }}">
+  </div>
+  <div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <a href="{% url 'administrator:dashboard' %}" class="btn btn-secondary">Clear</a>
+  </div>
+</form>
+
+<!-- Applications Table -->
+<div class="card">
+  <div class="card-header"><h2>Applications</h2></div>
+  <div class="card-body" style="padding:0;">
+    {% if applications %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th>Scholarship</th>
+            <th>Status</th>
+            <th>Docs</th>
+            <th>Submitted</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+          <tr>
+            <td>{{ app.pk }}</td>
+            <td>
+              <strong>{{ app.student.get_full_name|default:app.student.username }}</strong>
+              <br><span style="font-size:.8rem;color:var(--secondary);">{{ app.student.email }}</span>
+            </td>
+            <td>{{ app.scholarship.title }}</td>
+            <td><span class="badge {{ app.get_status_badge_class }}">{{ app.get_status_display }}</span></td>
+            <td>
+              {% with total_docs=app.scholarship.required_documents.count %}
+              {% with verified_docs=app.uploaded_documents.all %}
+                {{ app.uploaded_documents.count }}/{{ total_docs }}
+              {% endwith %}
+              {% endwith %}
+            </td>
+            <td>{{ app.submitted_at|date:"d M Y" }}</td>
+            <td>
+              <a href="{% url 'administrator:review_application' pk=app.pk %}" class="btn btn-primary btn-sm">Review</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>No applications found</h3>
+      <p>Try adjusting your filters.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

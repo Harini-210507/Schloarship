@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ scholarship.title }} – Scholarship Details{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1rem;">
+  <a href="{% url 'scholarships:list' %}" class="btn btn-secondary btn-sm">← Back to List</a>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;">
+
+  <!-- Details -->
+  <div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header">
+        <div>
+          <h2>{{ scholarship.title }}</h2>
+          <span style="font-size:.85rem;color:var(--secondary);">Created by {{ scholarship.created_by.get_full_name|default:scholarship.created_by.username }}</span>
+        </div>
+        {% if scholarship.is_open %}
+          <span class="badge badge-success">Open</span>
+        {% else %}
+          <span class="badge badge-danger">Closed</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <p style="white-space:pre-wrap;">{{ scholarship.description }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>📋 Eligibility Requirements</h3></div>
+      <div class="card-body">
+        <p style="white-space:pre-wrap;">{{ scholarship.eligibility }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-body">
+        <p style="font-size:.88rem;color:var(--secondary);margin-bottom:.5rem;">Scholarship Amount</p>
+        <p style="font-size:2rem;font-weight:800;color:var(--primary);">₹{{ scholarship.amount|floatformat:0 }}</p>
+        <hr style="margin:.85rem 0;border-color:var(--border);">
+        <p style="font-size:.88rem;color:var(--secondary);">Application Deadline</p>
+        <p style="font-weight:600;">{{ scholarship.deadline|date:"d F Y" }}</p>
+      </div>
+    </div>
+
+    {% if user.is_authenticated and not user.is_staff %}
+      {% if already_applied %}
+        <div class="alert alert-info">You have already applied for this scholarship.</div>
+        <a href="{% url 'applications:my_application' scholarship_pk=scholarship.pk %}" class="btn btn-secondary" style="width:100%;">View My Application</a>
+      {% elif scholarship.is_open %}
+        <a href="{% url 'applications:apply' scholarship_pk=scholarship.pk %}" class="btn btn-primary" style="width:100%;">Apply Now</a>
+      {% else %}
+        <div class="alert alert-warning">Applications for this scholarship are closed.</div>
+      {% endif %}
+    {% elif not user.is_authenticated %}
+      <div class="alert alert-info">Please <a href="{% url 'accounts:login' %}">log in</a> or <a href="{% url 'accounts:register' %}">register</a> to apply.</div>
+    {% endif %}
+
+    <!-- Required Documents -->
+    {% if required_docs %}
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-header"><h3>📁 Required Documents</h3></div>
+      <div class="card-body" style="padding:.75rem;">
+        <ul style="list-style:none;">
+          {% for doc in required_docs %}
+          <li style="padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.9rem;">
+            {% if doc.is_mandatory %}
+              <span style="color:var(--danger);font-weight:600;" title="Mandatory">✱</span>
+            {% else %}
+              <span style="color:var(--secondary);" title="Optional">○</span>
+            {% endif %}
+            <strong>{{ doc.name }}</strong>
+            {% if doc.description %}<br><span style="color:var(--secondary);font-size:.82rem;margin-left:1rem;">{{ doc.description }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        <p style="font-size:.78rem;color:var(--secondary);margin-top:.5rem;">✱ Mandatory documents</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

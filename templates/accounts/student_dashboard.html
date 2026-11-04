@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard – Scholarship System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>👋 Welcome, {{ user.first_name|default:user.username }}!</h1>
+  <p>Here is an overview of your scholarship applications.</p>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-label">Total Applications</div>
+  </div>
+  <div class="stat-card info">
+    <div class="stat-num">{{ submitted }}</div>
+    <div class="stat-label">Submitted</div>
+  </div>
+  <div class="stat-card warning">
+    <div class="stat-num">{{ under_review }}</div>
+    <div class="stat-label">Under Review</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-num">{{ approved }}</div>
+    <div class="stat-label">Approved</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-num">{{ rejected }}</div>
+    <div class="stat-label">Rejected</div>
+  </div>
+</div>
+
+<!-- Applications List -->
+<div class="card">
+  <div class="card-header">
+    <h2>My Applications</h2>
+    <a href="{% url 'scholarships:list' %}" class="btn btn-primary btn-sm">+ Apply for a Scholarship</a>
+  </div>
+  <div class="card-body" style="padding:0;">
+    {% if applications %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Scholarship</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+          <tr>
+            <td><strong>{{ app.scholarship.title }}</strong></td>
+            <td>₹{{ app.scholarship.amount|floatformat:0 }}</td>
+            <td><span class="badge {{ app.get_status_badge_class }}">{{ app.get_status_display }}</span></td>
+            <td>{{ app.submitted_at|date:"d M Y" }}</td>
+            <td>
+              <a href="{% url 'applications:status' pk=app.pk %}" class="btn btn-secondary btn-sm">View</a>
+              {% if app.status == 'submitted' or app.status == 'under_review' %}
+              <a href="{% url 'applications:upload_documents' pk=app.pk %}" class="btn btn-warning btn-sm">📤 Documents</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>No applications yet</h3>
+      <p>Browse available scholarships and submit your first application.</p>
+      <a href="{% url 'scholarships:list' %}" class="btn btn-primary" style="margin-top:1rem;">Browse Scholarships</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,3 @@
+[tool.vercel]
+entrypoint = "scholarship_system/wsgi.py"
+

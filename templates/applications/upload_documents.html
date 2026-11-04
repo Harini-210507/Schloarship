@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Upload Documents – {{ application.scholarship.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📁 Upload Documents</h1>
+  <p>Application for <strong>{{ application.scholarship.title }}</strong></p>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;">
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Required Documents</h2>
+        <span class="badge badge-info">{{ application.get_status_display }}</span>
+      </div>
+      <div class="card-body">
+        <p class="help-text" style="margin-bottom:1.25rem;">
+          Accepted formats: PDF, JPG, JPEG, PNG &mdash; Maximum size: 5 MB per file.
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          {% for item in doc_forms %}
+          <div class="card" style="margin-bottom:1rem;border:{% if item.upload and item.upload.status == 'rejected' %}2px solid var(--danger){% elif item.upload and item.upload.status == 'verified' %}2px solid var(--success){% else %}1px solid var(--border){% endif %};">
+            <div class="card-body">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
+                <div>
+                  <strong>{{ item.required_doc.name }}</strong>
+                  {% if item.required_doc.is_mandatory %}
+                    <span style="color:var(--danger);font-size:.8rem;"> (Required)</span>
+                  {% else %}
+                    <span style="color:var(--secondary);font-size:.8rem;"> (Optional)</span>
+                  {% endif %}
+                  {% if item.required_doc.description %}
+                    <p style="font-size:.82rem;color:var(--secondary);margin-top:.25rem;">{{ item.required_doc.description }}</p>
+                  {% endif %}
+                </div>
+                {% if item.upload %}
+                  <span class="badge {{ item.upload.get_status_badge_class }}">{{ item.upload.get_status_display }}</span>
+                {% endif %}
+              </div>
+
+              {% if item.upload %}
+                <div class="uploaded-file" style="margin-bottom:.75rem;{% if item.upload.status == 'rejected' %}background:#fef2f2;border-color:#fecaca;{% elif item.upload.status == 'verified' %}background:#f0fdf4;border-color:#bbf7d0;{% endif %}">
+                  <span>📄</span>
+                  <span class="file-name">{{ item.upload.filename }}</span>
+                  <span style="font-size:.78rem;color:var(--secondary);">{{ item.upload.uploaded_at|date:"d M Y" }}</span>
+                </div>
+
+                {% if item.upload.status == 'rejected' and item.upload.rejection_reason %}
+                  <div class="alert alert-error" style="margin-bottom:.75rem;">
+                    <strong>Rejection reason:</strong> {{ item.upload.rejection_reason }}
+                  </div>
+                {% endif %}
+
+                {% if item.upload.status == 'verified' %}
+                  <p style="font-size:.82rem;color:var(--success);">✅ This document has been verified. No changes needed.</p>
+                {% else %}
+                  <div class="upload-zone">
+                    <div class="upload-icon">🔄</div>
+                    <p class="upload-label">Replace document — click or drag &amp; drop</p>
+                    <input type="file" name="doc_{{ item.required_doc.pk }}" accept=".pdf,.jpg,.jpeg,.png">
+                  </div>
+                {% endif %}
+              {% else %}
+                <div class="upload-zone">
+                  <div class="upload-icon">📤</div>
+                  <p class="upload-label">Click to upload or drag &amp; drop</p>
+                  <input type="file" name="doc_{{ item.required_doc.pk }}" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <div style="display:flex;gap:.75rem;margin-top:1rem;">
+            <button type="submit" name="save_docs" class="btn btn-primary">💾 Save Uploads</button>
+            <button type="submit" name="submit_final" class="btn btn-success">✅ Done — View Status</button>
+            <a href="{% url 'applications:status' pk=application.pk %}" class="btn btn-secondary">View Status</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="card">
+      <div class="card-header"><h3>Progress</h3></div>
+      <div class="card-body">
+        {% for item in doc_forms %}
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;font-size:.88rem;">
+          {% if item.upload %}
+            {% if item.upload.status == 'verified' %}
+              <span style="color:var(--success);">✅</span>
+            {% elif item.upload.status == 'rejected' %}
+              <span style="color:var(--danger);">❌</span>
+            {% else %}
+              <span style="color:var(--warning);">⏳</span>
+            {% endif %}
+          {% else %}
+            <span style="color:var(--secondary);">○</span>
+          {% endif %}
+          <span>{{ item.required_doc.name }}</span>
+          {% if not item.required_doc.is_mandatory %}
+            <span style="font-size:.75rem;color:var(--secondary);">(opt)</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

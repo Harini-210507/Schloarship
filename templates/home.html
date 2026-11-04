@@ -1,0 +1,70 @@
+{% extends "base_full.html" %}
+{% block title %}Home – Scholarship Application System{% endblock %}
+
+{% block hero %}
+<div class="hero">
+  <h1>🎓 Scholarship Application System</h1>
+  <p>Apply for scholarships, upload your documents, and track your application — all in one place. Administrators can review and verify documents seamlessly.</p>
+  <div class="hero-actions">
+    {% if user.is_authenticated %}
+      {% if user.is_staff %}
+        <a href="{% url 'administrator:dashboard' %}" class="btn btn-hero-primary">Go to Admin Panel</a>
+      {% else %}
+        <a href="{% url 'dashboard:student_dashboard' %}" class="btn btn-hero-primary">My Dashboard</a>
+      {% endif %}
+    {% else %}
+      <a href="{% url 'accounts:register' %}" class="btn btn-hero-primary">Get Started</a>
+      <a href="{% url 'accounts:login' %}" class="btn btn-hero-secondary">Log In</a>
+    {% endif %}
+    <a href="{% url 'scholarships:list' %}" class="btn btn-hero-secondary">View Scholarships</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="features">
+  <div class="feature-card">
+    <div class="feature-icon">📄</div>
+    <h3>Easy Applications</h3>
+    <p>Browse available scholarships, review eligibility requirements, and submit your application with a few clicks.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📁</div>
+    <h3>Document Upload</h3>
+    <p>Securely upload required documents such as identity proof, income certificates, transcripts, and more.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔍</div>
+    <h3>Document Verification</h3>
+    <p>Administrators review each document individually and provide feedback for any corrections needed.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📊</div>
+    <h3>Real-time Status</h3>
+    <p>Track your application status, see which documents are verified, and read reviewer notes from your dashboard.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">✅</div>
+    <h3>Admin Review Panel</h3>
+    <p>Administrators can manage scholarships, filter applications, verify documents, and approve or reject applications.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔒</div>
+    <h3>Secure & Private</h3>
+    <p>Documents are stored securely. Only authorized administrators can access your uploaded files.</p>
+  </div>
+</div>
+
+<!-- How it Works -->
+<div style="max-width:700px;margin:0 auto 3rem;padding:0 1.5rem;">
+  <h2 style="text-align:center;font-size:1.6rem;margin-bottom:1.5rem;color:var(--dark);">How It Works</h2>
+  <ul class="timeline">
+    <li class="done"><strong>Register</strong> — Create a student account.</li>
+    <li class="done"><strong>Browse Scholarships</strong> — Find one that matches your eligibility.</li>
+    <li class="done"><strong>Apply &amp; Upload</strong> — Submit your application and upload the required documents.</li>
+    <li class="active"><strong>Review</strong> — Administrators verify each document.</li>
+    <li><strong>Decision</strong> — Receive an approval or rejection with a clear reason.</li>
+  </ul>
+</div>
+{% endblock %}
+

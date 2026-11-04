@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} – Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1rem;">
+  <a href="{% url 'administrator:manage_scholarships' %}" class="btn btn-secondary btn-sm">← Back to Scholarships</a>
+</div>
+
+<div class="page-header">
+  <h1>{{ title }}</h1>
+</div>
+
+<div style="display:grid;grid-template-columns:3fr 2fr;gap:1.5rem;align-items:start;">
+
+  <!-- Scholarship Form -->
+  <div class="card">
+    <div class="card-header"><h2>Scholarship Details</h2></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>Title <span style="color:var(--danger);">*</span></label>
+          <input type="text" name="title" class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                 value="{{ form.title.value|default:'' }}" required>
+          {% for err in form.title.errors %}<p class="error-text">{{ err }}</p>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label>Description <span style="color:var(--danger);">*</span></label>
+          <textarea name="description" class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                    rows="4" required>{{ form.description.value|default:'' }}</textarea>
+          {% for err in form.description.errors %}<p class="error-text">{{ err }}</p>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label>Eligibility Criteria <span style="color:var(--danger);">*</span></label>
+          <textarea name="eligibility" class="form-control {% if form.eligibility.errors %}is-invalid{% endif %}"
+                    rows="3" required>{{ form.eligibility.value|default:'' }}</textarea>
+          {% for err in form.eligibility.errors %}<p class="error-text">{{ err }}</p>{% endfor %}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount (₹) <span style="color:var(--danger);">*</span></label>
+            <input type="number" name="amount" class="form-control {% if form.amount.errors %}is-invalid{% endif %}"
+                   value="{{ form.amount.value|default:'' }}" step="0.01" min="0" required>
+            {% for err in form.amount.errors %}<p class="error-text">{{ err }}</p>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label>Application Deadline <span style="color:var(--danger);">*</span></label>
+            <input type="date" name="deadline" class="form-control {% if form.deadline.errors %}is-invalid{% endif %}"
+                   value="{{ form.deadline.value|default:'' }}" required>
+            {% for err in form.deadline.errors %}<p class="error-text">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group" style="display:flex;align-items:center;gap:.5rem;">
+          <input type="checkbox" name="is_active" id="is_active"
+                 {% if form.is_active.value %}checked{% endif %}>
+          <label for="is_active" style="margin:0;cursor:pointer;">Active (visible to students)</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">💾 Save Scholarship</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Required Documents (only on edit page) -->
+  {% if scholarship %}
+  <div>
+    <div class="card">
+      <div class="card-header"><h3>📋 Required Documents</h3></div>
+      <div class="card-body">
+        {% if required_docs %}
+          {% for doc in required_docs %}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);">
+            <div>
+              <strong style="font-size:.92rem;">{{ doc.name }}</strong>
+              {% if doc.is_mandatory %}
+                <span class="badge badge-danger" style="margin-left:.4rem;font-size:.72rem;">Required</span>
+              {% else %}
+                <span class="badge badge-secondary" style="margin-left:.4rem;font-size:.72rem;">Optional</span>
+              {% endif %}
+              {% if doc.description %}
+                <p style="font-size:.8rem;color:var(--secondary);margin-top:.2rem;">{{ doc.description }}</p>
+              {% endif %}
+            </div>
+            <form method="post" action="{% url 'administrator:delete_required_document' pk=doc.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm"
+                      data-confirm="Remove '{{ doc.name }}' from required documents?">✕</button>
+            </form>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color:var(--secondary);font-size:.9rem;margin-bottom:1rem;">No required documents yet.</p>
+        {% endif %}
+
+        <!-- Add Document Form -->
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <h4 style="font-size:.95rem;margin-bottom:.85rem;">+ Add Required Document</h4>
+          <form method="post" action="{% url 'administrator:add_required_document' scholarship_pk=scholarship.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+              <label style="font-size:.85rem;">Document Name</label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Income Certificate" required>
+            </div>
+            <div class="form-group">
+              <label style="font-size:.85rem;">Description (optional)</label>
+              <textarea name="description" class="form-control" rows="2"
+                        placeholder="What exactly should be submitted?"></textarea>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:.5rem;">
+              <input type="checkbox" name="is_mandatory" id="is_mandatory" checked>
+              <label for="is_mandatory" style="margin:0;font-size:.85rem;cursor:pointer;">Mandatory</label>
+            </div>
+            <div class="form-group">
+              <label style="font-size:.85rem;">Display Order</label>
+              <input type="number" name="order" class="form-control" value="0" min="0" style="max-width:80px;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Add Document</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

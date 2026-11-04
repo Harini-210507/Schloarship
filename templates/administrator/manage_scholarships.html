@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Manage Scholarships – Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🎓 Manage Scholarships</h1>
+  <p>Create, edit, and manage scholarship listings.</p>
+</div>
+
+<div style="margin-bottom:1.25rem;">
+  <a href="{% url 'administrator:create_scholarship' %}" class="btn btn-success">+ Create New Scholarship</a>
+  <a href="{% url 'administrator:dashboard' %}" class="btn btn-secondary" style="margin-left:.5rem;">← Back to Dashboard</a>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0;">
+    {% if scholarships %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Deadline</th>
+            <th>Applications</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in scholarships %}
+          <tr>
+            <td><strong>{{ s.title }}</strong></td>
+            <td>₹{{ s.amount|floatformat:0 }}</td>
+            <td>{{ s.deadline|date:"d M Y" }}</td>
+            <td>{{ s.applications.count }}</td>
+            <td>
+              {% if s.is_active %}
+                <span class="badge badge-success">Active</span>
+              {% else %}
+                <span class="badge badge-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'administrator:edit_scholarship' pk=s.pk %}" class="btn btn-primary btn-sm">Edit</a>
+              <form method="post" action="{% url 'administrator:toggle_scholarship' pk=s.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm {% if s.is_active %}btn-warning{% else %}btn-success{% endif %}"
+                        data-confirm="{% if s.is_active %}Deactivate this scholarship?{% else %}Activate this scholarship?{% endif %}">
+                  {% if s.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🏷️</div>
+      <h3>No scholarships yet</h3>
+      <p>Create your first scholarship to get started.</p>
+      <a href="{% url 'administrator:create_scholarship' %}" class="btn btn-primary" style="margin-top:1rem;">Create Scholarship</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Application Status – {{ application.scholarship.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1rem;">
+  <a href="{% url 'dashboard:student_dashboard' %}" class="btn btn-secondary btn-sm">← My Dashboard</a>
+</div>
+
+<div class="page-header">
+  <h1>📋 Application Status</h1>
+  <p>{{ application.scholarship.title }}</p>
+</div>
+
+<!-- Status Banner -->
+<div class="alert {% if application.status == 'approved' %}alert-success{% elif application.status == 'rejected' %}alert-error{% elif application.status == 'under_review' %}alert-warning{% else %}alert-info{% endif %}" style="display:flex;align-items:center;gap:1rem;">
+  <span style="font-size:1.5rem;">
+    {% if application.status == 'approved' %}✅
+    {% elif application.status == 'rejected' %}❌
+    {% elif application.status == 'under_review' %}🔍
+    {% else %}📤{% endif %}
+  </span>
+  <div>
+    <strong>Status: {{ application.get_status_display }}</strong>
+    {% if application.review_notes %}
+      <p style="margin-top:.25rem;">{{ application.review_notes }}</p>
+    {% endif %}
+    {% if application.reviewed_at %}
+      <p style="font-size:.82rem;opacity:.8;">Reviewed on {{ application.reviewed_at|date:"d M Y, H:i" }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start;">
+  <!-- Documents -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📁 Uploaded Documents</h2>
+      {% if application.status == 'submitted' or application.status == 'under_review' %}
+        <a href="{% url 'applications:upload_documents' pk=application.pk %}" class="btn btn-warning btn-sm">📤 Manage Documents</a>
+      {% endif %}
+    </div>
+    <div class="card-body" style="padding:0;">
+      {% if uploads %}
+        {% for upload in uploads %}
+        <div class="doc-review-item" style="padding:1rem 1.25rem;">
+          <div>
+            <div class="doc-name">{{ upload.required_document.name }}</div>
+            <div class="doc-meta">
+              Uploaded: {{ upload.uploaded_at|date:"d M Y, H:i" }}
+              &nbsp;|&nbsp; File: {{ upload.filename }}
+            </div>
+            {% if upload.status == 'rejected' and upload.rejection_reason %}
+              <div class="alert alert-error" style="margin-top:.5rem;padding:.5rem .85rem;">
+                <strong>Reason:</strong> {{ upload.rejection_reason }}
+              </div>
+            {% endif %}
+          </div>
+          <div style="text-align:right;">
+            <span class="badge {{ upload.get_status_badge_class }}">{{ upload.get_status_display }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:2rem;">
+          <p>No documents uploaded yet.</p>
+          <a href="{% url 'applications:upload_documents' pk=application.pk %}" class="btn btn-primary" style="margin-top:.75rem;">Upload Documents</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Sidebar info -->
+  <div>
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-header"><h3>Application Info</h3></div>
+      <div class="card-body" style="font-size:.9rem;">
+        <p style="margin-bottom:.5rem;"><span style="color:var(--secondary);">Application #</span><br><strong>{{ application.pk }}</strong></p>
+        <p style="margin-bottom:.5rem;"><span style="color:var(--secondary);">Scholarship</span><br><strong>{{ application.scholarship.title }}</strong></p>
+        <p style="margin-bottom:.5rem;"><span style="color:var(--secondary);">Amount</span><br><strong>₹{{ application.scholarship.amount|floatformat:0 }}</strong></p>
+        <p style="margin-bottom:.5rem;"><span style="color:var(--secondary);">Submitted</span><br><strong>{{ application.submitted_at|date:"d M Y" }}</strong></p>
+        {% if application.reviewed_by %}
+        <p><span style="color:var(--secondary);">Reviewed by</span><br><strong>{{ application.reviewed_by.get_full_name|default:application.reviewed_by.username }}</strong></p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>What's Next?</h3></div>
+      <div class="card-body" style="font-size:.88rem;color:var(--secondary);">
+        {% if application.status == 'submitted' %}
+          <p>Your application has been submitted. Upload all required documents so the administrator can begin reviewing.</p>
+        {% elif application.status == 'under_review' %}
+          <p>Your documents are being reviewed. If any document is rejected, replace it using the Manage Documents button.</p>
+        {% elif application.status == 'approved' %}
+          <p>🎉 Congratulations! Your application has been approved. Please contact the scholarship office for further steps.</p>
+        {% elif application.status == 'rejected' %}
+          <p>Unfortunately your application was rejected. See the reason above. You may contact the scholarship office for clarification.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

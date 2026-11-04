@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Review Application #{{ application.pk }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1rem;">
+  <a href="{% url 'administrator:dashboard' %}" class="btn btn-secondary btn-sm">← Admin Dashboard</a>
+</div>
+
+<div class="page-header">
+  <h1>🔍 Review Application #{{ application.pk }}</h1>
+  <p>{{ application.scholarship.title }}</p>
+</div>
+
+<!-- Info bar -->
+<div class="card" style="margin-bottom:1.25rem;">
+  <div class="card-body" style="display:flex;flex-wrap:wrap;gap:2rem;">
+    <div>
+      <span style="font-size:.8rem;color:var(--secondary);text-transform:uppercase;">Student</span>
+      <p style="font-weight:600;">{{ application.student.get_full_name|default:application.student.username }}</p>
+      <p style="font-size:.85rem;color:var(--secondary);">{{ application.student.email }}</p>
+    </div>
+    <div>
+      <span style="font-size:.8rem;color:var(--secondary);text-transform:uppercase;">Status</span>
+      <p><span class="badge {{ application.get_status_badge_class }}" style="font-size:.9rem;">{{ application.get_status_display }}</span></p>
+    </div>
+    <div>
+      <span style="font-size:.8rem;color:var(--secondary);text-transform:uppercase;">Submitted</span>
+      <p style="font-weight:600;">{{ application.submitted_at|date:"d M Y, H:i" }}</p>
+    </div>
+    {% if application.reviewed_by %}
+    <div>
+      <span style="font-size:.8rem;color:var(--secondary);text-transform:uppercase;">Reviewed By</span>
+      <p style="font-weight:600;">{{ application.reviewed_by.get_full_name|default:application.reviewed_by.username }}</p>
+      <p style="font-size:.85rem;color:var(--secondary);">{{ application.reviewed_at|date:"d M Y, H:i" }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:3fr 1fr;gap:1.5rem;align-items:start;">
+
+  <!-- Document Review -->
+  <div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><h2>📁 Document Review</h2></div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% for item in doc_review_list %}
+          <div class="doc-review-item">
+            <div>
+              <div class="doc-name">
+                {{ item.required_doc.name }}
+                {% if item.required_doc.is_mandatory %}
+                  <span style="color:var(--danger);font-size:.8rem;">(Mandatory)</span>
+                {% else %}
+                  <span style="color:var(--secondary);font-size:.8rem;">(Optional)</span>
+                {% endif %}
+              </div>
+              {% if item.required_doc.description %}
+                <p class="doc-meta">{{ item.required_doc.description }}</p>
+              {% endif %}
+
+              {% if item.upload %}
+                <p class="doc-meta" style="margin-top:.35rem;">
+                  📄 <a href="{{ item.upload.file.url }}" target="_blank" style="color:var(--primary);font-weight:500;">
+                    {{ item.upload.filename }}
+                  </a>
+                  — Uploaded {{ item.upload.uploaded_at|date:"d M Y, H:i" }}
+                  {% if item.upload.is_image %}
+                    &nbsp;<a href="{{ item.upload.file.url }}" target="_blank" style="font-size:.8rem;">[Preview]</a>
+                  {% endif %}
+                </p>
+
+                <div style="margin-top:.75rem;display:flex;gap:.75rem;align-items:flex-start;flex-wrap:wrap;">
+                  <div class="form-group" style="margin:0;flex-shrink:0;">
+                    <label style="font-size:.8rem;">Status</label>
+                    <select name="doc_status_{{ item.upload.pk }}" class="form-control" style="min-width:130px;">
+                      <option value="pending"  {% if item.upload.status == 'pending'  %}selected{% endif %}>⏳ Pending</option>
+                      <option value="verified" {% if item.upload.status == 'verified' %}selected{% endif %}>✅ Verified</option>
+                      <option value="rejected" {% if item.upload.status == 'rejected' %}selected{% endif %}>❌ Rejected</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="margin:0;flex:1;">
+                    <label style="font-size:.8rem;">Rejection Reason (if rejected)</label>
+                    <input type="text" name="doc_reason_{{ item.upload.pk }}" class="form-control"
+                           value="{{ item.upload.rejection_reason }}" placeholder="Describe what is wrong...">
+                  </div>
+                </div>
+              {% else %}
+                <p class="doc-meta" style="color:var(--danger);margin-top:.35rem;">⚠️ Not uploaded by student</p>
+              {% endif %}
+            </div>
+            {% if item.upload %}
+              <div style="text-align:right;">
+                <span class="badge {{ item.upload.get_status_badge_class }}">{{ item.upload.get_status_display }}</span>
+              </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+          {% if application.status != 'approved' and application.status != 'rejected' %}
+          <div style="margin-top:1rem;">
+            <button type="submit" name="action" value="update_docs" class="btn btn-primary">💾 Save Document Statuses</button>
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision Sidebar -->
+  <div>
+    {% if application.status != 'approved' and application.status != 'rejected' %}
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-header"><h3>✅ Approve Application</h3></div>
+      <div class="card-body">
+        {% if can_approve %}
+          <div class="alert alert-success" style="font-size:.85rem;">All mandatory documents are verified. Ready to approve.</div>
+          <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              <label style="font-size:.85rem;">Approval Note (optional)</label>
+              <textarea name="review_notes" class="form-control" rows="3" placeholder="Congratulations message or notes..."></textarea>
+            </div>
+            <button type="submit" name="action" value="approve" class="btn btn-success" style="width:100%;"
+                    data-confirm="Approve this application?">
+              ✅ Approve
+            </button>
+          </form>
+        {% else %}
+          <div class="alert alert-warning" style="font-size:.85rem;">
+            Verify all mandatory documents before approving.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>❌ Reject Application</h3></div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label style="font-size:.85rem;">Rejection Reason <span style="color:var(--danger);">*</span></label>
+            <textarea name="review_notes" class="form-control" rows="3"
+                      placeholder="Explain why the application is rejected..." required></textarea>
+          </div>
+          <button type="submit" name="action" value="reject" class="btn btn-danger" style="width:100%;"
+                  data-confirm="Reject this application? This action will notify the student.">
+            ❌ Reject Application
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="card">
+      <div class="card-header"><h3>Decision Made</h3></div>
+      <div class="card-body">
+        <span class="badge {{ application.get_status_badge_class }}" style="font-size:1rem;">{{ application.get_status_display }}</span>
+        {% if application.review_notes %}
+          <p style="margin-top:.75rem;font-size:.9rem;"><strong>Notes:</strong> {{ application.review_notes }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

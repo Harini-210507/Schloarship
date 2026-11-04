@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found{% endblock %}
+{% block content %}
+<div class="empty-state" style="margin-top:4rem;">
+  <div class="empty-icon">🔍</div>
+  <h3>Page Not Found (404)</h3>
+  <p>The page you are looking for does not exist or has been moved.</p>
+  <div style="margin-top:1.5rem;">
+    <a href="{% url 'home' %}" class="btn btn-primary">Go Home</a>
+  </div>
+</div>
+{% endblock %}
+

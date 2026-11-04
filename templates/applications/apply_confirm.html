@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Apply – {{ scholarship.title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:2rem auto;">
+  <a href="{% url 'scholarships:detail' pk=scholarship.pk %}" class="btn btn-secondary btn-sm" style="margin-bottom:1rem;">← Back</a>
+
+  <div class="card">
+    <div class="card-header"><h2>📝 Confirm Application</h2></div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        You are about to apply for <strong>{{ scholarship.title }}</strong> (₹{{ scholarship.amount|floatformat:0 }}).
+        Please review the eligibility criteria before confirming.
+      </div>
+
+      <div style="margin:1rem 0;padding:1rem;background:var(--light);border-radius:var(--radius);border:1px solid var(--border);">
+        <h3 style="font-size:.95rem;margin-bottom:.5rem;">Eligibility Requirements</h3>
+        <p style="font-size:.9rem;white-space:pre-wrap;">{{ scholarship.eligibility }}</p>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <p style="font-size:.9rem;color:var(--secondary);">
+          Deadline: <strong>{{ scholarship.deadline|date:"d F Y" }}</strong>
+        </p>
+      </div>
+
+      <p style="font-size:.88rem;color:var(--secondary);margin-bottom:1.25rem;">
+        After confirming, you will be prompted to upload the required documents.
+        You can update documents later from your dashboard.
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div style="display:flex;gap:.75rem;">
+          <button type="submit" class="btn btn-primary">✅ Confirm &amp; Apply</button>
+          <a href="{% url 'scholarships:detail' pk=scholarship.pk %}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

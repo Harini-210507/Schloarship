@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Available Scholarships{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🎓 Available Scholarships</h1>
+  <p>Browse and apply for scholarships you qualify for.</p>
+</div>
+
+{% if scholarships %}
+<div class="scholarship-grid">
+  {% for s in scholarships %}
+  <div class="scholarship-card">
+    <h3>{{ s.title }}</h3>
+    <div class="amount">₹{{ s.amount|floatformat:0 }}</div>
+    <div class="deadline">📅 Deadline: {{ s.deadline|date:"d M Y" }}
+      {% if not s.is_open %}
+        <span class="badge badge-danger" style="margin-left:.4rem;">Closed</span>
+      {% endif %}
+    </div>
+    <p class="desc">{{ s.description|truncatewords:30 }}</p>
+    <div class="card-footer">
+      <a href="{% url 'scholarships:detail' pk=s.pk %}" class="btn btn-primary btn-sm">View Details</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">🏷️</div>
+  <h3>No scholarships available</h3>
+  <p>Please check back later or contact the administrator.</p>
+</div>
+{% endif %}
+{% endblock %}
+

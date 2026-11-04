@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Scholarship Application System{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+</head>
+<body>
+<nav class="navbar">
+  <a href="{% url 'home' %}" class="navbar-brand">Scholarship<span>System</span></a>
+  <button class="hamburger"><span></span><span></span><span></span></button>
+  <div class="navbar-links">
+    <a href="{% url 'scholarships:list' %}">Scholarships</a>
+    {% if user.is_authenticated %}
+      {% if user.is_staff %}
+        <a href="{% url 'administrator:dashboard' %}">Admin Panel</a>
+      {% else %}
+        <a href="{% url 'dashboard:student_dashboard' %}">Dashboard</a>
+      {% endif %}
+      <form method="post" action="{% url 'accounts:logout' %}" style="display:inline">
+        {% csrf_token %}<button type="submit">Log Out</button>
+      </form>
+    {% else %}
+      <a href="{% url 'accounts:login' %}">Log In</a>
+      <a href="{% url 'accounts:register' %}" class="btn-nav-cta">Register</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% if messages %}
+<div style="max-width:1200px;margin:.75rem auto;padding:0 1.5rem;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}" data-auto-dismiss>{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block hero %}{% endblock %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer><p>&copy; 2026 Scholarship Application System &mdash; Academic Project</p></footer>
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
+
